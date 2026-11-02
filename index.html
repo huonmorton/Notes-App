@@ -7,50 +7,167 @@
   <style>
     :root {
       --sidebar-bg: #2d2e30;
+      --sidebar-text: #ffffff;
+      --sidebar-btn-bg: #3c4043;
+      --sidebar-btn-hover: #5f6368;
+      --sidebar-btn-text: #e8eaed;
+      --tab-bar-bg: #f1f3f4;
       --tab-bg: #e8eaed;
-      --tab-active: #ffffff;
+      --tab-text: #202124;
+      --tab-active-bg: #ffffff;
+      --tab-active-text: #000000;
+      --editor-bg: #ffffff;
+      --workspace-bg: #fafafa;
       --text-main: #202124;
       --border-color: #dadce0;
     }
+
+    /* GUI Themes */
+    body.theme-light {
+      --sidebar-bg: #f8f9fa;
+      --sidebar-text: #202124;
+      --sidebar-btn-bg: #ffffff;
+      --sidebar-btn-hover: #e8eaed;
+      --sidebar-btn-text: #3c4043;
+      --tab-bar-bg: #e9ecef;
+      --tab-bg: #dee2e6;
+      --tab-text: #495057;
+      --tab-active-bg: #ffffff;
+      --tab-active-text: #212529;
+      --editor-bg: #ffffff;
+      --workspace-bg: #f8f9fa;
+      --text-main: #212529;
+      --border-color: #ced4da;
+    }
+
+    body.theme-midnight {
+      --sidebar-bg: #0f172a;
+      --sidebar-text: #f8fafc;
+      --sidebar-btn-bg: #1e293b;
+      --sidebar-btn-hover: #334155;
+      --sidebar-btn-text: #e2e8f0;
+      --tab-bar-bg: #0b1120;
+      --tab-bg: #1e293b;
+      --tab-text: #94a3b8;
+      --tab-active-bg: #1e293b;
+      --tab-active-text: #38bdf8;
+      --editor-bg: #0f172a;
+      --workspace-bg: #090d16;
+      --text-main: #f1f5f9;
+      --border-color: #334155;
+    }
+
+    body.theme-sepia {
+      --sidebar-bg: #4a3b32;
+      --sidebar-text: #fdf6e2;
+      --sidebar-btn-bg: #5c493e;
+      --sidebar-btn-hover: #6e584b;
+      --sidebar-btn-text: #fdf6e2;
+      --tab-bar-bg: #ede0d4;
+      --tab-bg: #ddb892;
+      --tab-text: #4a3b32;
+      --tab-active-bg: #fefae0;
+      --tab-active-text: #4a3b32;
+      --editor-bg: #fefae0;
+      --workspace-bg: #faedcd;
+      --text-main: #3d2b1f;
+      --border-color: #b08968;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { display: flex; height: 100vh; overflow: hidden; background: #fff; }
+    body { display: flex; height: 100vh; overflow: hidden; background: var(--workspace-bg); }
 
     #sidebar {
-      width: 180px;
+      width: 220px;
       background: var(--sidebar-bg);
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      padding: 16px 12px;
-      color: #fff;
+      gap: 6px;
+      padding: 14px 10px;
+      color: var(--sidebar-text);
       user-select: none;
       overflow-y: auto;
+      border-right: 1px solid var(--border-color);
+      transition: background 0.2s, color 0.2s;
     }
-    .sidebar-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9aa0a6; margin-top: 10px; margin-bottom: 2px; }
+    .sidebar-title { 
+      font-size: 11px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.8px; 
+      color: #9aa0a6; 
+      margin-top: 10px; 
+      margin-bottom: 2px; 
+      font-weight: 600;
+    }
     .tool-btn {
-      background: #3c4043;
-      border: 1px solid #5f6368;
-      color: #e8eaed;
-      padding: 7px 10px;
+      background: var(--sidebar-btn-bg);
+      border: 1px solid var(--border-color);
+      color: var(--sidebar-btn-text);
+      padding: 6px 8px;
       font-size: 12px;
       border-radius: 4px;
       cursor: pointer;
       text-align: left;
+      transition: background 0.15s;
     }
-    .tool-btn:hover { background: #5f6368; }
-    .tool-btn.active-btn { background: #1a73e8; border-color: #1a73e8; }
+    .tool-btn:hover { background: var(--sidebar-btn-hover); }
+    .tool-btn.active-btn { background: #1a73e8; border-color: #1a73e8; color: #fff; }
+    
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--sidebar-text);
+      padding: 2px 4px;
+    }
+    .color-row input[type="color"] {
+      width: 28px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    .select-control {
+      background: var(--sidebar-btn-bg);
+      border: 1px solid var(--border-color);
+      color: var(--sidebar-btn-text);
+      font-size: 11px;
+      border-radius: 3px;
+      padding: 3px 6px;
+      outline: none;
+    }
+
+    .color-swatches {
+      display: flex;
+      gap: 6px;
+      padding: 4px 0;
+    }
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .swatch.selected {
+      border-color: #ffffff;
+      transform: scale(1.1);
+    }
 
     #main-container { flex: 1; display: flex; flex-direction: column; position: relative; }
     #top-bar {
-      display: flex; align-items: flex-end; background: #f1f3f4;
+      display: flex; align-items: flex-end; background: var(--tab-bar-bg);
       border-bottom: 1px solid var(--border-color); padding: 8px 12px 0 12px; gap: 4px; overflow-x: auto;
+      transition: background 0.2s;
     }
     .tab {
-      background: var(--tab-bg); padding: 8px 14px; border-radius: 6px 6px 0 0;
+      background: var(--tab-bg); color: var(--tab-text); padding: 8px 14px; border-radius: 6px 6px 0 0;
       font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;
       border: 1px solid transparent; border-bottom: none;
     }
-    .tab.active { background: var(--tab-active); border-color: var(--border-color); font-weight: 600; }
+    .tab.active { background: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--border-color); font-weight: 600; }
     .tab .close-tab { font-size: 14px; color: #70757a; cursor: pointer; }
     .tab .close-tab:hover { color: #d93025; }
     #add-tab-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 4px 10px; color: #5f6368; }
@@ -63,27 +180,108 @@
       padding-right: 12px;
     }
 
-    #workspace { flex: 1; position: relative; overflow: hidden; background: #fafafa; }
+    #workspace { flex: 1; position: relative; overflow: hidden; background: var(--workspace-bg); }
     #editor {
       width: 100%; height: 100%; padding: 30px 40px; overflow-y: auto; outline: none;
-      font-size: 15px; line-height: 1.6; color: var(--text-main); background: #fff;
+      font-size: 15px; line-height: 1.6; color: var(--text-main); background: var(--editor-bg);
+      transition: background 0.2s, color 0.2s;
     }
-    #editor table { border-collapse: collapse; margin: 12px 0; width: 100%; }
-    #editor td, #editor th { border: 1px solid #ccc; padding: 8px; min-width: 50px; }
-    #editor img { max-width: 100%; border-radius: 4px; margin: 10px 0; }
+    
+    /* Table Styling & Resizing */
+    #editor table {
+      border-collapse: collapse;
+      margin: 14px 0;
+      width: auto;
+      table-layout: fixed;
+    }
+    #editor td, #editor th {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      min-width: 50px;
+      min-height: 25px;
+      vertical-align: top;
+      position: relative;
+    }
+    
+    /* Image Selection */
+    #editor img {
+      max-width: 100%;
+      border-radius: 4px;
+      margin: 10px 0;
+      display: block;
+      cursor: pointer;
+      transition: outline 0.1s;
+    }
+    #editor img.selected-img {
+      outline: 3px solid #1a73e8;
+    }
 
+    /* Embedded File Card */
+    .embedded-file-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--sidebar-btn-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 8px 0;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 13px;
+      user-select: none;
+      cursor: pointer;
+      max-width: 380px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .embedded-file-card:hover {
+      background: #e8f0fe;
+      border-color: #1a73e8;
+      color: #202124;
+    }
+    .file-icon { font-size: 18px; }
+    .file-details { display: flex; flex-direction: column; overflow: hidden; }
+    .file-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-meta { font-size: 11px; opacity: 0.8; }
+
+    /* Sticky Notes */
     .sticky-note {
-      position: absolute; width: 200px; height: 160px; background: #fff9c4;
-      border: 1px solid #fbc02d; box-shadow: 2px 4px 10px rgba(0,0,0,0.15); border-radius: 4px;
+      position: absolute; width: 200px; height: 160px;
+      box-shadow: 2px 4px 10px rgba(0,0,0,0.15); border-radius: 6px;
       display: flex; flex-direction: column; z-index: 10;
+      border: 1px solid rgba(0,0,0,0.1);
     }
     .sticky-header {
-      background: #fff59d; padding: 4px 6px; cursor: grab; display: flex;
-      justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: #555;
+      padding: 4px 8px; cursor: grab; display: flex;
+      justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: rgba(0,0,0,0.6);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-    .sticky-content { flex: 1; padding: 6px; outline: none; font-size: 13px; overflow-y: auto; }
-    .sticky-close { cursor: pointer; font-weight: bold; color: #777; }
+    .sticky-actions { display: flex; align-items: center; gap: 6px; }
+    .sticky-color-btn { cursor: pointer; font-size: 11px; }
+    .sticky-content { flex: 1; padding: 8px; outline: none; font-size: 13px; overflow-y: auto; color: #202124; }
+    .sticky-close { cursor: pointer; font-weight: bold; font-size: 14px; }
     .sticky-close:hover { color: #d93025; }
+    .sticky-palette {
+      display: none;
+      position: absolute;
+      top: 26px;
+      right: 6px;
+      background: #fff;
+      padding: 4px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      gap: 4px;
+      z-index: 20;
+    }
+    .sticky-palette span {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
   </style>
 
   <!-- Google Identity Services & GAPI Client -->
@@ -93,11 +291,30 @@
 <body>
 
   <div id="sidebar">
+    <div class="sidebar-title">Appearance</div>
+    <div class="color-row">
+      <span>GUI Theme</span>
+      <select id="gui-theme-select" class="select-control" onchange="applyTheme(this.value, true)">
+        <option value="default">Dark (Default)</option>
+        <option value="light">Light Clean</option>
+        <option value="midnight">Midnight Blue</option>
+        <option value="sepia">Warm Sepia</option>
+      </select>
+    </div>
+
     <div class="sidebar-title">Google Drive Sync</div>
     <button id="auth-btn" class="tool-btn active-btn" onclick="handleAuthClick()">Sign In with Google</button>
     <button class="tool-btn" onclick="syncToDrive()">Sync Now</button>
 
-    <div class="sidebar-title">Formatting</div>
+    <div class="sidebar-title">Colors & Style</div>
+    <div class="color-row">
+      <span>Text Color</span>
+      <input type="color" id="text-color" value="#000000" onchange="changeTextColor(this.value)">
+    </div>
+    <div class="color-row">
+      <span>Highlight</span>
+      <input type="color" id="bg-color" value="#ffff00" onchange="changeHighlightColor(this.value)">
+    </div>
     <button class="tool-btn" onclick="formatDoc('bold')"><b>Bold</b> (Ctrl+B)</button>
     <button class="tool-btn" onclick="formatDoc('italic')"><i>Italic</i> (Ctrl+I)</button>
     <button class="tool-btn" onclick="formatDoc('underline')"><u>Underline</u> (Ctrl+U)</button>
@@ -105,11 +322,62 @@
     <button class="tool-btn" onclick="formatDoc('formatBlock', '<h2>')">Heading 2</button>
     <button class="tool-btn" onclick="formatDoc('formatBlock', '<p>')">Normal Text</button>
 
-    <div class="sidebar-title">Insert</div>
-    <button class="tool-btn" onclick="insertTable()">+ Table</button>
-    <button class="tool-btn" onclick="document.getElementById('image-input').click()">+ Image</button>
+    <div class="sidebar-title">Table Tools</div>
+    <button class="tool-btn" onclick="insertTable()">+ Insert Table</button>
+    <button class="tool-btn" onclick="addTableRow()">+ Add Row</button>
+    <button class="tool-btn" onclick="addTableColumn()">+ Add Column</button>
+    <button class="tool-btn" onclick="deleteTableRow()">- Remove Row</button>
+    <div class="color-row">
+      <span>Cell Color</span>
+      <input type="color" id="cell-color" value="#f1f3f4" onchange="changeCellColor(this.value)">
+    </div>
+    <div class="color-row">
+      <span>Border Color</span>
+      <input type="color" id="table-border-color" value="#cccccc" onchange="updateTableBorders()">
+    </div>
+    <div class="color-row">
+      <span>Width</span>
+      <select id="table-border-width" class="select-control" onchange="updateTableBorders()">
+        <option value="0px">None</option>
+        <option value="1px" selected>1px</option>
+        <option value="2px">2px</option>
+        <option value="3px">3px</option>
+        <option value="4px">4px</option>
+      </select>
+    </div>
+    <div class="color-row">
+      <span>Style</span>
+      <select id="table-border-style" class="select-control" onchange="updateTableBorders()">
+        <option value="solid" selected>Solid</option>
+        <option value="dashed">Dashed</option>
+        <option value="dotted">Dotted</option>
+        <option value="double">Double</option>
+      </select>
+    </div>
+
+    <div class="sidebar-title">Media & Files</div>
+    <button class="tool-btn" onclick="document.getElementById('image-input').click()">+ Upload Image</button>
     <input type="file" id="image-input" style="display: none" accept="image/*" onchange="insertImage(event)">
-    <button class="tool-btn" onclick="createSticky()">+ Sticky Note</button>
+    <button class="tool-btn" onclick="document.getElementById('file-input').click()">+ Embed File</button>
+    <input type="file" id="file-input" style="display: none" onchange="insertEmbeddedFile(event)">
+
+    <div id="image-controls" style="display: none; flex-direction: column; gap: 4px; margin-top: 4px;">
+      <span style="font-size: 11px; color: #8ab4f8;">Selected Image:</span>
+      <button class="tool-btn" onclick="resizeSelectedImage('200px')">Small (200px)</button>
+      <button class="tool-btn" onclick="resizeSelectedImage('450px')">Medium (450px)</button>
+      <button class="tool-btn" onclick="resizeSelectedImage('100%')">Full Width</button>
+      <button class="tool-btn" onclick="deleteSelectedImage()" style="color: #f28b82;">Delete Image</button>
+    </div>
+
+    <div class="sidebar-title">Add Sticky Note</div>
+    <div class="color-swatches">
+      <div class="swatch selected" style="background: #fff9c4;" onclick="selectDefaultStickyColor('#fff9c4', this)"></div>
+      <div class="swatch" style="background: #ffcdd2;" onclick="selectDefaultStickyColor('#ffcdd2', this)"></div>
+      <div class="swatch" style="background: #c8e6c9;" onclick="selectDefaultStickyColor('#c8e6c9', this)"></div>
+      <div class="swatch" style="background: #bbdefb;" onclick="selectDefaultStickyColor('#bbdefb', this)"></div>
+      <div class="swatch" style="background: #e1bee7;" onclick="selectDefaultStickyColor('#e1bee7', this)"></div>
+    </div>
+    <button class="tool-btn" onclick="createSticky()">+ Add Sticky Note</button>
 
     <div class="sidebar-title">Local Backup</div>
     <button class="tool-btn" onclick="exportData()">Export JSON</button>
@@ -142,9 +410,12 @@
     let gisInited = false;
     let driveFileId = null;
     let syncTimeout = null;
+    let selectedImage = null;
+    let activeStickyColor = '#fff9c4';
 
     // --- APPLICATION STATE ---
     let state = JSON.parse(localStorage.getItem('notes_app_data')) || {
+      theme: 'default',
       activeId: 1,
       groups: [{ id: 1, name: "General", content: "<p>Start writing here...</p>", stickies: [] }]
     };
@@ -154,12 +425,22 @@
     const stickyContainer = document.getElementById('sticky-container');
     const syncStatus = document.getElementById('sync-status');
     const authBtn = document.getElementById('auth-btn');
+    const imageControls = document.getElementById('image-controls');
+    const themeSelect = document.getElementById('gui-theme-select');
 
-    // --- GOOGLE API INITIALIZATION ---
-    function gapiLoaded() {
-      gapi.load('client', initializeGapiClient);
+    // --- THEME CONTROL ---
+    function applyTheme(themeName, shouldSync = false) {
+      document.body.className = '';
+      if (themeName && themeName !== 'default') {
+        document.body.classList.add(`theme-${themeName}`);
+      }
+      state.theme = themeName || 'default';
+      if (themeSelect) themeSelect.value = state.theme;
+      if (shouldSync) scheduleSync();
     }
 
+    // --- GOOGLE API INITIALIZATION ---
+    function gapiLoaded() { gapi.load('client', initializeGapiClient); }
     async function initializeGapiClient() {
       await gapi.client.init({
         apiKey: API_KEY,
@@ -172,7 +453,7 @@
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
-        callback: '', // defined at request time
+        callback: '',
       });
       gisInited = true;
     }
@@ -184,15 +465,12 @@
 
     function handleAuthClick() {
       tokenClient.callback = async (resp) => {
-        if (resp.error !== undefined) {
-          throw (resp);
-        }
+        if (resp.error !== undefined) throw resp;
         authBtn.innerText = "Signed In";
         authBtn.classList.remove('active-btn');
         syncStatus.innerText = "Connected to Drive";
         await loadFromDrive();
       };
-
       if (gapi.client.getToken() === null) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
@@ -200,7 +478,6 @@
       }
     }
 
-    // Find or create sync file on Drive
     async function getOrCreateDriveFile() {
       const response = await gapi.client.drive.files.list({
         q: `name = '${SYNC_FILENAME}' and trashed = false`,
@@ -219,18 +496,15 @@
       return driveFileId;
     }
 
-    // Load data from Google Drive
     async function loadFromDrive() {
       try {
         syncStatus.innerText = "Checking Drive...";
         const fileId = await getOrCreateDriveFile();
-        const res = await gapi.client.drive.files.get({
-          fileId: fileId,
-          alt: 'media',
-        });
+        const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
         if (res.result && res.result.groups) {
           state = res.result;
           localStorage.setItem('notes_app_data', JSON.stringify(state));
+          applyTheme(state.theme || 'default', false);
           renderTabs();
           renderWorkspace();
           syncStatus.innerText = "Synced with Drive";
@@ -242,9 +516,8 @@
       }
     }
 
-    // Upload data to Google Drive
     async function syncToDrive() {
-      if (!gapi.client.getToken()) return;
+      if (!window.gapi || !gapi.client || !gapi.client.getToken()) return;
       saveLocalState();
       syncStatus.innerText = "Syncing to Drive...";
       try {
@@ -263,7 +536,7 @@
       }
     }
 
-    // --- CORE NOTE APP LOGIC ---
+    // --- WORKSPACE & EDITOR LOGIC ---
     function saveLocalState() {
       const current = state.groups.find(g => g.id === state.activeId);
       if (current) {
@@ -271,6 +544,7 @@
         current.stickies = Array.from(document.querySelectorAll('.sticky-note')).map(el => ({
           x: parseInt(el.style.left) || 20,
           y: parseInt(el.style.top) || 20,
+          color: el.dataset.color || '#fff9c4',
           text: el.querySelector('.sticky-content').innerHTML
         }));
       }
@@ -282,7 +556,7 @@
       syncStatus.innerText = "Saving locally...";
       clearTimeout(syncTimeout);
       syncTimeout = setTimeout(() => {
-        if (gapi.client.getToken()) syncToDrive();
+        if (window.gapi && gapi.client && gapi.client.getToken()) syncToDrive();
       }, 2000);
     }
 
@@ -305,7 +579,8 @@
       if (!current) return;
       editor.innerHTML = current.content || "";
       stickyContainer.innerHTML = "";
-      (current.stickies || []).forEach(s => addStickyNode(s.x, s.y, s.text));
+      (current.stickies || []).forEach(s => addStickyNode(s.x, s.y, s.text, s.color || '#fff9c4'));
+      clearImageSelection();
     }
 
     function switchTab(id) {
@@ -340,65 +615,317 @@
       scheduleSync();
     }
 
+    function changeTextColor(color) { formatDoc('foreColor', color); }
+    function changeHighlightColor(color) { formatDoc('hiliteColor', color); }
+
+    // --- TABLE MANIPULATION, BORDERS & RESIZING ---
     function insertTable() {
       const r = prompt("Rows:", "3");
       const c = prompt("Columns:", "3");
       if (!r || !c) return;
-      let html = "<table>";
+      let html = "<table><tbody>";
       for (let i = 0; i < parseInt(r); i++) {
         html += "<tr>";
-        for (let j = 0; j < parseInt(c); j++) html += "<td>&nbsp;</td>";
+        for (let j = 0; j < parseInt(c); j++) {
+          html += "<td style='width: 120px; height: 35px; border: 1px solid #ccc;'>&nbsp;</td>";
+        }
         html += "</tr>";
       }
-      html += "</table><p></p>";
+      html += "</tbody></table><p></p>";
       formatDoc('insertHTML', html);
     }
 
-    function insertImage(e) {
+    function getParentTableCell() {
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return null;
+      let node = selection.anchorNode;
+      while (node && node !== editor) {
+        if (node.nodeName === 'TD' || node.nodeName === 'TH') return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    function addTableRow() {
+      const cell = getParentTableCell();
+      if (!cell) { alert("Place cursor inside a table row first."); return; }
+      const row = cell.parentElement;
+      const newRow = row.cloneNode(true);
+      Array.from(newRow.children).forEach(td => td.innerHTML = "&nbsp;");
+      row.parentElement.insertBefore(newRow, row.nextSibling);
+      scheduleSync();
+    }
+
+    function addTableColumn() {
+      const cell = getParentTableCell();
+      if (!cell) { alert("Place cursor inside a table cell first."); return; }
+      const colIndex = cell.cellIndex;
+      const table = cell.closest('table');
+      Array.from(table.rows).forEach(row => {
+        const newCell = row.insertCell(colIndex + 1);
+        newCell.style.width = '120px';
+        newCell.style.border = cell.style.border || '1px solid #ccc';
+        newCell.innerHTML = "&nbsp;";
+      });
+      scheduleSync();
+    }
+
+    function deleteTableRow() {
+      const cell = getParentTableCell();
+      if (!cell) { alert("Place cursor inside a table row first."); return; }
+      cell.parentElement.remove();
+      scheduleSync();
+    }
+
+    function changeCellColor(color) {
+      const cell = getParentTableCell();
+      if (!cell) { alert("Place cursor inside a table cell first."); return; }
+      cell.style.backgroundColor = color;
+      scheduleSync();
+    }
+
+    function updateTableBorders() {
+      const cell = getParentTableCell();
+      if (!cell) { alert("Place cursor inside the target table first."); return; }
+      const table = cell.closest('table');
+      const bColor = document.getElementById('table-border-color').value;
+      const bWidth = document.getElementById('table-border-width').value;
+      const bStyle = document.getElementById('table-border-style').value;
+      const borderCss = bWidth === '0px' ? 'none' : `${bWidth} ${bStyle} ${bColor}`;
+
+      Array.from(table.querySelectorAll('td, th')).forEach(c => {
+        c.style.border = borderCss;
+      });
+      scheduleSync();
+    }
+
+    // Drag to Resize Table Rows & Columns
+    let resizingCell = null;
+    let resizeType = null;
+    let startX = 0, startY = 0, startWidth = 0, startHeight = 0;
+
+    editor.addEventListener('mousemove', (e) => {
+      if (resizingCell) return;
+      const cell = e.target.closest('td, th');
+      if (!cell) {
+        editor.style.cursor = 'default';
+        return;
+      }
+      const rect = cell.getBoundingClientRect();
+      const edgeThreshold = 6;
+      const nearRight = (rect.right - e.clientX) < edgeThreshold && (rect.right - e.clientX) >= 0;
+      const nearBottom = (rect.bottom - e.clientY) < edgeThreshold && (rect.bottom - e.clientY) >= 0;
+
+      if (nearRight) {
+        editor.style.cursor = 'col-resize';
+      } else if (nearBottom) {
+        editor.style.cursor = 'row-resize';
+      } else {
+        editor.style.cursor = 'default';
+      }
+    });
+
+    editor.addEventListener('mousedown', (e) => {
+      const cell = e.target.closest('td, th');
+      if (!cell) return;
+      const rect = cell.getBoundingClientRect();
+      const edgeThreshold = 6;
+      const nearRight = (rect.right - e.clientX) < edgeThreshold && (rect.right - e.clientX) >= 0;
+      const nearBottom = (rect.bottom - e.clientY) < edgeThreshold && (rect.bottom - e.clientY) >= 0;
+
+      if (nearRight || nearBottom) {
+        e.preventDefault();
+        resizingCell = cell;
+        resizeType = nearRight ? 'col' : 'row';
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = cell.offsetWidth;
+        startHeight = cell.offsetHeight;
+
+        const onMouseMove = (moveEvent) => {
+          if (!resizingCell) return;
+          if (resizeType === 'col') {
+            const newWidth = Math.max(40, startWidth + (moveEvent.clientX - startX));
+            const colIndex = resizingCell.cellIndex;
+            const table = resizingCell.closest('table');
+            Array.from(table.rows).forEach(row => {
+              if (row.cells[colIndex]) row.cells[colIndex].style.width = `${newWidth}px`;
+            });
+          } else if (resizeType === 'row') {
+            const newHeight = Math.max(25, startHeight + (moveEvent.clientY - startY));
+            resizingCell.parentElement.style.height = `${newHeight}px`;
+          }
+        };
+
+        const onMouseUp = () => {
+          resizingCell = null;
+          resizeType = null;
+          editor.style.cursor = 'default';
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          scheduleSync();
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      }
+    });
+
+    // --- FILE EMBEDDING ---
+    function insertEmbeddedFile(e) {
       const file = e.target.files[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = function(evt) {
-        formatDoc('insertHTML', `<img src="${evt.target.result}" /><p></p>`);
+        const base64Data = evt.target.result;
+        const fileSizeStr = file.size > 1024 * 1024 
+          ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+          : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+
+        const fileHtml = `
+          <div class="embedded-file-card" contenteditable="false" onclick="downloadEmbeddedFile(this)">
+            <span class="file-icon">📎</span>
+            <div class="file-details">
+              <span class="file-name" title="${file.name}">${file.name}</span>
+              <span class="file-meta">${fileSizeStr} • Click to Download</span>
+            </div>
+            <a style="display:none;" href="${base64Data}" download="${file.name}"></a>
+          </div><p></p>
+        `;
+        formatDoc('insertHTML', fileHtml);
       };
       reader.readAsDataURL(file);
       e.target.value = "";
     }
 
-    function createSticky() {
-      addStickyNode(60, 60, "New note...");
+    function downloadEmbeddedFile(cardElement) {
+      const hiddenLink = cardElement.querySelector('a');
+      if (hiddenLink) hiddenLink.click();
+    }
+
+    // --- IMAGE RESIZING & SELECTION ---
+    function insertImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        formatDoc('insertHTML', `<img src="${evt.target.result}" style="width: 350px;" /><p></p>`);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    }
+
+    editor.addEventListener('click', (e) => {
+      if (e.target.tagName === 'IMG') {
+        selectImage(e.target);
+      } else {
+        clearImageSelection();
+      }
+    });
+
+    function selectImage(img) {
+      clearImageSelection();
+      selectedImage = img;
+      selectedImage.classList.add('selected-img');
+      imageControls.style.display = 'flex';
+    }
+
+    function clearImageSelection() {
+      if (selectedImage) {
+        selectedImage.classList.remove('selected-img');
+        selectedImage = null;
+      }
+      imageControls.style.display = 'none';
+    }
+
+    function resizeSelectedImage(size) {
+      if (!selectedImage) return;
+      selectedImage.style.width = size;
       scheduleSync();
     }
 
-    function addStickyNode(x, y, content) {
+    function deleteSelectedImage() {
+      if (!selectedImage) return;
+      selectedImage.remove();
+      clearImageSelection();
+      scheduleSync();
+    }
+
+    // --- STICKY NOTES WITH MULTIPLE COLOURS ---
+    function selectDefaultStickyColor(color, swatchEl) {
+      activeStickyColor = color;
+      document.querySelectorAll('.color-swatches .swatch').forEach(s => s.classList.remove('selected'));
+      swatchEl.classList.add('selected');
+    }
+
+    function createSticky() {
+      addStickyNode(60, 60, "New note...", activeStickyColor);
+      scheduleSync();
+    }
+
+    function addStickyNode(x, y, content, color = '#fff9c4') {
       const el = document.createElement('div');
       el.className = 'sticky-note';
       el.style.left = `${x}px`;
       el.style.top = `${y}px`;
+      el.dataset.color = color;
+      el.style.backgroundColor = color;
+
       el.innerHTML = `
         <div class="sticky-header">
           <span>Sticky</span>
-          <span class="sticky-close">×</span>
+          <div class="sticky-actions">
+            <span class="sticky-color-btn" title="Change Color">🎨</span>
+            <span class="sticky-close" title="Delete">×</span>
+          </div>
+        </div>
+        <div class="sticky-palette">
+          <span style="background: #fff9c4;" data-c="#fff9c4"></span>
+          <span style="background: #ffcdd2;" data-c="#ffcdd2"></span>
+          <span style="background: #c8e6c9;" data-c="#c8e6c9"></span>
+          <span style="background: #bbdefb;" data-c="#bbdefb"></span>
+          <span style="background: #e1bee7;" data-c="#e1bee7"></span>
         </div>
         <div class="sticky-content" contenteditable="true">${content}</div>
       `;
+
+      const palette = el.querySelector('.sticky-palette');
+      const colorBtn = el.querySelector('.sticky-color-btn');
+
+      colorBtn.onclick = (e) => {
+        e.stopPropagation();
+        palette.style.display = palette.style.display === 'flex' ? 'none' : 'flex';
+      };
+
+      palette.querySelectorAll('span').forEach(sw => {
+        sw.onclick = (e) => {
+          e.stopPropagation();
+          const newColor = sw.dataset.c;
+          el.style.backgroundColor = newColor;
+          el.dataset.color = newColor;
+          palette.style.display = 'none';
+          scheduleSync();
+        };
+      });
 
       el.querySelector('.sticky-close').onclick = () => { el.remove(); scheduleSync(); };
       el.querySelector('.sticky-content').oninput = scheduleSync;
 
       const header = el.querySelector('.sticky-header');
-      let isDragging = false, startX, startY, origX, origY;
+      let isDragging = false, dragStartX, dragStartY, origX, origY;
 
       header.onmousedown = (e) => {
+        if (e.target.closest('.sticky-actions') || e.target.closest('.sticky-palette')) return;
         isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
         origX = el.offsetLeft;
         origY = el.offsetTop;
         document.onmousemove = (me) => {
           if (!isDragging) return;
-          el.style.left = `${origX + (me.clientX - startX)}px`;
-          el.style.top = `${origY + (me.clientY - startY)}px`;
+          el.style.left = `${origX + (me.clientX - dragStartX)}px`;
+          el.style.top = `${origY + (me.clientY - dragStartY)}px`;
         };
         document.onmouseup = () => {
           isDragging = false;
@@ -411,6 +938,7 @@
       stickyContainer.appendChild(el);
     }
 
+    // --- LOCAL BACKUP ---
     function exportData() {
       saveLocalState();
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -430,6 +958,7 @@
           if (loaded.groups && Array.isArray(loaded.groups)) {
             state = loaded;
             localStorage.setItem('notes_app_data', JSON.stringify(state));
+            applyTheme(state.theme || 'default', false);
             renderTabs();
             renderWorkspace();
             scheduleSync();
@@ -443,6 +972,9 @@
     }
 
     editor.addEventListener('input', scheduleSync);
+    
+    // Initial Load & Apply Theme
+    applyTheme(state.theme || 'default', false);
     renderTabs();
     renderWorkspace();
   </script>
