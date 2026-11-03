@@ -284,9 +284,8 @@
     }
   </style>
 
-  <!-- Google Identity Services & GAPI Client -->
+  <!-- Google Identity Services (No GAPI client or API Key needed) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
 
@@ -304,7 +303,8 @@
 
     <div class="sidebar-title">Google Drive Sync</div>
     <button id="auth-btn" class="tool-btn active-btn" onclick="handleAuthClick()">Sign In with Google</button>
-    <button class="tool-btn" onclick="syncToDrive()">Sync Now</button>
+    <button class="tool-btn" onclick="syncToDrive()">Sync to Drive</button>
+    <button class="tool-btn" onclick="loadFromDrive()">Pull from Drive</button>
 
     <div class="sidebar-title">Colors & Style</div>
     <div class="color-row">
@@ -401,15 +401,14 @@
   <script>
     // --- GOOGLE DRIVE CONFIGURATION ---
     const CLIENT_ID = '157147659451-saa5f64vvgg33kkl41klse8jfq447rnr.apps.googleusercontent.com';
-    const API_KEY = 'AIzaSyAzkt1L5EHyUNww-a_Ub9QneHruq9Ae1ZY';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     const SYNC_FILENAME = 'notes_app_sync.json';
 
     let tokenClient;
-    let gapiInited = false;
     let gisInited = false;
     let driveFileId = null;
     let syncTimeout = null;
+    let userAccessToken = null;
     let selectedImage = null;
     let activeStickyColor = '#fff9c4';
 
@@ -440,15 +439,6 @@
     }
 
     // --- GOOGLE API INITIALIZATION ---
-    function gapiLoaded() { gapi.load('client', initializeGapiClient); }
-    async function initializeGapiClient() {
-      await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-      });
-      gapiInited = true;
-    }
-
     function gisLoaded() {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
@@ -459,19 +449,20 @@
     }
 
     window.addEventListener('load', () => {
-      gapiLoaded();
       gisLoaded();
     });
 
     function handleAuthClick() {
       tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) throw resp;
+        userAccessToken = resp.access_token;
         authBtn.innerText = "Signed In";
         authBtn.classList.remove('active-btn');
         syncStatus.innerText = "Connected to Drive";
         await loadFromDrive();
       };
-      if (gapi.client.getToken() === null) {
+
+      if (!userAccessToken) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
         tokenClient.requestAccessToken({ prompt: '' });
@@ -479,55 +470,85 @@
     }
 
     async function getOrCreateDriveFile() {
-      const response = await gapi.client.drive.files.list({
-        q: `name = '${SYNC_FILENAME}' and trashed = false`,
-        fields: 'files(id, name)',
+      const query = encodeURIComponent(`name = '${SYNC_FILENAME}' and trashed = false`);
+      const listResp = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`, {
+        headers: { 'Authorization': `Bearer ${userAccessToken}` }
       });
-      const files = response.result.files;
-      if (files && files.length > 0) {
-        driveFileId = files[0].id;
+      const data = await listResp.json();
+
+      if (data.files && data.files.length > 0) {
+        driveFileId = data.files[0].id;
       } else {
-        const createResp = await gapi.client.drive.files.create({
-          resource: { name: SYNC_FILENAME, mimeType: 'application/json' },
-          fields: 'id',
+        const createResp = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${userAccessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: SYNC_FILENAME, mimeType: 'application/json' })
         });
-        driveFileId = createResp.result.id;
+        const newFile = await createResp.json();
+        driveFileId = newFile.id;
       }
       return driveFileId;
     }
 
     async function loadFromDrive() {
+      if (!userAccessToken) {
+        alert("Please sign in with Google first.");
+        return;
+      }
+      syncStatus.innerText = "Searching Drive...";
       try {
-        syncStatus.innerText = "Checking Drive...";
         const fileId = await getOrCreateDriveFile();
-        const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-        if (res.result && res.result.groups) {
-          state = res.result;
-          localStorage.setItem('notes_app_data', JSON.stringify(state));
-          applyTheme(state.theme || 'default', false);
-          renderTabs();
-          renderWorkspace();
-          syncStatus.innerText = "Synced with Drive";
-        } else {
-          await syncToDrive();
+        syncStatus.innerText = "Downloading notes...";
+
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+          headers: { 'Authorization': `Bearer ${userAccessToken}` }
+        });
+
+        if (res.ok) {
+          const driveData = await res.json();
+          if (driveData && Array.isArray(driveData.groups) && driveData.groups.length > 0) {
+            const localHasCustomNotes = state.groups.length > 1 || 
+              (state.groups[0] && state.groups[0].content && !state.groups[0].content.includes("Start writing here..."));
+
+            if (localHasCustomNotes && !confirm("Replace current local notes with the copy from Google Drive?")) {
+              await syncToDrive();
+              return;
+            }
+
+            state = driveData;
+            localStorage.setItem('notes_app_data', JSON.stringify(state));
+            applyTheme(state.theme || 'default', false);
+            renderTabs();
+            renderWorkspace();
+            syncStatus.innerText = `Loaded from Drive (${new Date().toLocaleTimeString()})`;
+            return;
+          }
         }
+        await syncToDrive();
       } catch (err) {
+        console.error("Failed to load from Drive:", err);
         syncStatus.innerText = "Sync failed";
       }
     }
 
     async function syncToDrive() {
-      if (!window.gapi || !gapi.client || !gapi.client.getToken()) return;
+      if (!userAccessToken) {
+        alert("Please sign in with Google first.");
+        return;
+      }
       saveLocalState();
       syncStatus.innerText = "Syncing to Drive...";
       try {
         const fileId = await getOrCreateDriveFile();
         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
           method: 'PATCH',
-          headers: new Headers({
-            'Authorization': `Bearer ${gapi.client.getToken().access_token}`,
+          headers: {
+            'Authorization': `Bearer ${userAccessToken}`,
             'Content-Type': 'application/json'
-          }),
+          },
           body: JSON.stringify(state)
         });
         syncStatus.innerText = `Synced (${new Date().toLocaleTimeString()})`;
@@ -556,7 +577,7 @@
       syncStatus.innerText = "Saving locally...";
       clearTimeout(syncTimeout);
       syncTimeout = setTimeout(() => {
-        if (window.gapi && gapi.client && gapi.client.getToken()) syncToDrive();
+        if (userAccessToken) syncToDrive();
       }, 2000);
     }
 
