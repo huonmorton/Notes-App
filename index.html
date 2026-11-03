@@ -6,20 +6,11 @@
   <title>Notes</title>
   <style>
     :root {
-      --sidebar-bg: #2d2e30;
-      --sidebar-text: #ffffff;
-      --sidebar-btn-bg: #3c4043;
-      --sidebar-btn-hover: #5f6368;
-      --sidebar-btn-text: #e8eaed;
-      --tab-bar-bg: #f1f3f4;
-      --tab-bg: #e8eaed;
-      --tab-text: #202124;
-      --tab-active-bg: #ffffff;
-      --tab-active-text: #000000;
-      --editor-bg: #ffffff;
-      --workspace-bg: #fafafa;
-      --text-main: #202124;
-      --border-color: #dadce0;
+      --sidebar-bg: #2d2e30; --sidebar-text: #ffffff; --sidebar-btn-bg: #3c4043;
+      --sidebar-btn-hover: #5f6368; --sidebar-btn-text: #e8eaed; --tab-bar-bg: #f1f3f4;
+      --tab-bg: #e8eaed; --tab-text: #202124; --tab-active-bg: #ffffff;
+      --tab-active-text: #000000; --editor-bg: #ffffff; --workspace-bg: #fafafa;
+      --text-main: #202124; --border-color: #dadce0;
     }
 
     /* GUI Themes */
@@ -68,22 +59,8 @@
     .tool-btn:hover { background: var(--sidebar-btn-hover); }
     .tool-btn.active-btn { background: #1a73e8; border-color: #1a73e8; color: #fff; }
     
-    /* Formatting Square Tiles Grid */
-    .formatting-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-      margin-bottom: 4px;
-    }
-    .icon-btn {
-      text-align: center;
-      padding: 8px 0;
-      font-size: 14px;
-      line-height: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+    .formatting-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 4px; }
+    .icon-btn { text-align: center; padding: 8px 0; font-size: 14px; line-height: 1; display: flex; justify-content: center; align-items: center; }
 
     .color-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--sidebar-text); padding: 2px 4px; }
     .color-row input[type="color"] { width: 28px; height: 24px; border: none; background: transparent; cursor: pointer; }
@@ -106,18 +83,12 @@
     #workspace { flex: 1; position: relative; overflow: hidden; background: var(--workspace-bg); }
     #editor { width: 100%; height: 100%; padding: 30px 40px; overflow-y: auto; outline: none; font-size: 15px; line-height: 1.6; color: var(--text-main); background: var(--editor-bg); transition: background 0.2s, color 0.2s; }
     
-    /* Table Styling & Resizing */
     #editor table { border-collapse: collapse; margin: 14px 0; width: auto; table-layout: fixed; }
     #editor td, #editor th { border: 1px solid #ccc; padding: 8px 12px; min-width: 50px; min-height: 25px; vertical-align: top; position: relative; }
     
-    /* Side-by-Side Images */
-    #editor img {
-      max-width: 100%; border-radius: 4px; margin: 4px;
-      display: inline-block; vertical-align: middle; cursor: pointer; transition: outline 0.1s;
-    }
+    #editor img { max-width: 100%; border-radius: 4px; margin: 4px; display: inline-block; vertical-align: middle; cursor: pointer; transition: outline 0.1s; }
     #editor img.selected-img { outline: 3px solid #1a73e8; }
 
-    /* Embedded File Card */
     .embedded-file-card { display: inline-flex; align-items: center; gap: 10px; background: var(--sidebar-btn-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; margin: 8px 4px; text-decoration: none; color: var(--text-main); font-size: 13px; user-select: none; cursor: pointer; max-width: 380px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background 0.15s, border-color 0.15s; }
     .embedded-file-card:hover { background: #e8f0fe; border-color: #1a73e8; color: #202124; }
     .file-icon { font-size: 18px; }
@@ -125,7 +96,6 @@
     .file-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .file-meta { font-size: 11px; opacity: 0.8; }
 
-    /* Sticky Notes (Native Resizing Added) */
     .sticky-note {
       position: absolute; width: 200px; height: 160px; min-width: 140px; min-height: 100px;
       box-shadow: 2px 4px 10px rgba(0,0,0,0.15); border-radius: 6px; display: flex; flex-direction: column; 
@@ -218,6 +188,7 @@
 
     <div class="sidebar-title">Cloud Sync & App</div>
     <button id="auth-btn" class="tool-btn active-btn" onclick="handleAuthClick()">Sign In with Google</button>
+    <button class="tool-btn" onclick="syncToDrive()">Sync to Drive</button>
     <button class="tool-btn" onclick="loadFromDrive()">Pull from Drive</button>
     <div class="color-row" style="margin-top: 4px;">
       <span>Theme</span>
@@ -259,7 +230,6 @@
     let selectedImage = null;
     let activeStickyColor = '#fff9c4';
 
-    // Highlight & Focus Memory
     let savedSelectionRange = null;
     let lastActiveCell = null;
 
@@ -297,24 +267,16 @@
       }
     }
 
-    // Instant Color Update Listeners
     document.getElementById('text-color').addEventListener('input', (e) => {
-      restoreSelection();
-      document.execCommand('foreColor', false, e.target.value);
-      scheduleSync();
+      restoreSelection(); document.execCommand('foreColor', false, e.target.value); scheduleSync();
     });
 
     document.getElementById('bg-color').addEventListener('input', (e) => {
-      restoreSelection();
-      document.execCommand('hiliteColor', false, e.target.value); // Fallback for browsers: 'backColor'
-      scheduleSync();
+      restoreSelection(); document.execCommand('hiliteColor', false, e.target.value); scheduleSync();
     });
 
     document.getElementById('cell-color').addEventListener('input', (e) => {
-      if (lastActiveCell) {
-        lastActiveCell.style.backgroundColor = e.target.value;
-        scheduleSync();
-      }
+      if (lastActiveCell) { lastActiveCell.style.backgroundColor = e.target.value; scheduleSync(); }
     });
 
     // --- THEME CONTROL ---
@@ -402,7 +364,13 @@
           color: el.dataset.color || '#fff9c4', text: el.querySelector('.sticky-content').innerHTML
         }));
       }
-      localStorage.setItem('notes_app_data', JSON.stringify(state));
+      
+      // Failsafe error handling for storage limits
+      try {
+        localStorage.setItem('notes_app_data', JSON.stringify(state));
+      } catch (e) {
+        console.error("Storage Error - Likely too many large images:", e);
+      }
     }
 
     function scheduleSync() {
@@ -468,83 +436,87 @@
 
     // --- CORNER RESIZING FOR TABLES & IMAGES ---
     let resizingTarget = null;
-    let resizeAction = null; // 'col', 'row', 'scale-img', 'scale-table'
+    let resizeAction = null; 
     let dragStartX = 0, dragStartY = 0, startWidth = 0, startHeight = 0;
+
+    editor.addEventListener('dragstart', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); });
 
     editor.addEventListener('mousemove', (e) => {
       if (resizingTarget) return;
-      const target = e.target;
-      let cursor = 'text';
-
+      const target = e.target; let cursor = 'text';
       if (target.tagName === 'IMG') {
         const rect = target.getBoundingClientRect();
-        if (e.clientX > rect.right - 15 && e.clientY > rect.bottom - 15) cursor = 'nwse-resize'; else cursor = 'pointer';
+        if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) cursor = 'nwse-resize'; else cursor = 'pointer';
       } else {
         const cell = target.closest('td, th');
         if (cell) {
-          const rect = cell.getBoundingClientRect();
-          const table = cell.closest('table');
-          const tableRect = table.getBoundingClientRect();
-          
-          const isTableCorner = (tableRect.right - e.clientX) < 12 && (tableRect.bottom - e.clientY) < 12 && 
-                                cell === table.rows[table.rows.length-1].cells[table.rows[table.rows.length-1].cells.length-1];
-          
+          const rect = cell.getBoundingClientRect(); const table = cell.closest('table'); const tableRect = table.getBoundingClientRect();
+          const isTableCorner = (tableRect.right - e.clientX) < 15 && (tableRect.bottom - e.clientY) < 15 && cell === table.rows[table.rows.length-1].cells[table.rows[table.rows.length-1].cells.length-1];
           if (isTableCorner) cursor = 'nwse-resize';
-          else if (rect.right - e.clientX < 8 && rect.right - e.clientX >= 0) cursor = 'col-resize';
-          else if (rect.bottom - e.clientY < 8 && rect.bottom - e.clientY >= 0) cursor = 'row-resize';
+          else if (rect.right - e.clientX < 10 && rect.right - e.clientX >= 0) cursor = 'col-resize';
+          else if (rect.bottom - e.clientY < 10 && rect.bottom - e.clientY >= 0) cursor = 'row-resize';
         }
       }
       if (editor.style.cursor !== cursor) editor.style.cursor = cursor;
     });
 
     editor.addEventListener('mousedown', (e) => {
-      const cur = editor.style.cursor;
       const target = e.target;
-      if (cur === 'nwse-resize' || cur === 'col-resize' || cur === 'row-resize') {
-        e.preventDefault();
-        
-        if (cur === 'nwse-resize') {
-          if (target.tagName === 'IMG') { resizingTarget = target; resizeAction = 'scale-img'; }
-          else { resizingTarget = target.closest('table'); resizeAction = 'scale-table'; }
-        } 
-        else if (cur === 'col-resize') { resizingTarget = target.closest('td, th'); resizeAction = 'col'; }
-        else if (cur === 'row-resize') { resizingTarget = target.closest('td, th'); resizeAction = 'row'; }
-
-        dragStartX = e.clientX; dragStartY = e.clientY;
-        startWidth = resizingTarget.offsetWidth; startHeight = resizingTarget.offsetHeight;
-
-        const onMouseMove = (me) => {
-          if (!resizingTarget) return;
-          const newW = startWidth + (me.clientX - dragStartX);
-          const newH = startHeight + (me.clientY - dragStartY);
-          
-          if (resizeAction === 'scale-img') {
-             resizingTarget.style.width = Math.max(50, newW) + 'px';
-             resizingTarget.style.height = 'auto'; // Locks aspect ratio automatically
-          } 
-          else if (resizeAction === 'scale-table') {
-             resizingTarget.style.width = Math.max(100, newW) + 'px';
-             resizingTarget.style.height = Math.max(50, newH) + 'px';
-          } 
-          else if (resizeAction === 'col') {
-             const colIndex = resizingTarget.cellIndex;
-             Array.from(resizingTarget.closest('table').rows).forEach(r => { if (r.cells[colIndex]) r.cells[colIndex].style.width = Math.max(30, newW) + 'px'; });
-          } 
-          else if (resizeAction === 'row') {
-             resizingTarget.parentElement.style.height = Math.max(20, newH) + 'px';
-          }
-        };
-
-        const onMouseUp = () => {
-          resizingTarget = null; resizeAction = null; editor.style.cursor = 'text';
-          document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp);
-          scheduleSync();
-        };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+      if (target.tagName === 'IMG') {
+        const rect = target.getBoundingClientRect();
+        if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) {
+          e.preventDefault(); resizingTarget = target; resizeAction = 'scale-img'; dragStartX = e.clientX; startWidth = target.offsetWidth;
+          const onMouseMove = (me) => { if (!resizingTarget) return; const newW = startWidth + (me.clientX - dragStartX); resizingTarget.style.width = Math.max(50, newW) + 'px'; resizingTarget.style.height = 'auto'; };
+          const onMouseUp = () => { resizingTarget = null; resizeAction = null; editor.style.cursor = 'text'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); scheduleSync(); };
+          document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp); return;
+        }
+      }
+      const cell = target.closest('td, th');
+      if (cell) {
+        const rect = cell.getBoundingClientRect(); const table = cell.closest('table'); const tableRect = table.getBoundingClientRect();
+        const isTableCorner = (tableRect.right - e.clientX) < 15 && (tableRect.bottom - e.clientY) < 15 && cell === table.rows[table.rows.length-1].cells[table.rows[table.rows.length-1].cells.length-1];
+        const isColResize = rect.right - e.clientX < 10 && rect.right - e.clientX >= 0;
+        const isRowResize = rect.bottom - e.clientY < 10 && rect.bottom - e.clientY >= 0;
+        if (isTableCorner || isColResize || isRowResize) {
+          e.preventDefault(); resizingTarget = isTableCorner ? table : cell; resizeAction = isTableCorner ? 'scale-table' : (isColResize ? 'col' : 'row'); dragStartX = e.clientX; dragStartY = e.clientY; startWidth = resizingTarget.offsetWidth; startHeight = resizingTarget.offsetHeight;
+          const onMouseMove = (me) => {
+            if (!resizingTarget) return;
+            if (resizeAction === 'scale-table') { resizingTarget.style.width = Math.max(100, startWidth + (me.clientX - dragStartX)) + 'px'; resizingTarget.style.height = Math.max(50, startHeight + (me.clientY - dragStartY)) + 'px'; } 
+            else if (resizeAction === 'col') { const newW = Math.max(30, startWidth + (me.clientX - dragStartX)); const colIndex = cell.cellIndex; Array.from(table.rows).forEach(r => { if (r.cells[colIndex]) r.cells[colIndex].style.width = newW + 'px'; }); } 
+            else if (resizeAction === 'row') { cell.parentElement.style.height = Math.max(20, startHeight + (me.clientY - dragStartY)) + 'px'; }
+          };
+          const onMouseUp = () => { resizingTarget = null; resizeAction = null; editor.style.cursor = 'text'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); scheduleSync(); };
+          document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+        }
       }
     });
+
+    // --- COMPRESS & INSERT IMAGES ---
+    function insertImage(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) { 
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          const maxW = 1200; // Auto-compress large images to prevent freeze
+          if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressedData = canvas.toDataURL('image/jpeg', 0.85);
+          formatDoc('insertHTML', `<img src="${compressedData}" style="width: 250px;" />&nbsp;`); 
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file); e.target.value = "";
+    }
+
+    editor.addEventListener('click', (e) => { if (e.target.tagName === 'IMG') selectImage(e.target); else clearImageSelection(); });
+    function selectImage(img) { clearImageSelection(); selectedImage = img; selectedImage.classList.add('selected-img'); imageControls.style.display = 'flex'; }
+    function clearImageSelection() { if (selectedImage) { selectedImage.classList.remove('selected-img'); selectedImage = null; } imageControls.style.display = 'none'; }
+    function deleteSelectedImage() { if (!selectedImage) return; selectedImage.remove(); clearImageSelection(); scheduleSync(); }
 
     // --- FILE EMBEDDING ---
     function insertEmbeddedFile(e) {
@@ -560,22 +532,6 @@
     }
     function downloadEmbeddedFile(cardElement) { const hiddenLink = cardElement.querySelector('a'); if (hiddenLink) hiddenLink.click(); }
 
-    // --- IMAGES ---
-    function insertImage(e) {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) { formatDoc('insertHTML', `<img src="${evt.target.result}" style="width: 250px;" />&nbsp;`); };
-      reader.readAsDataURL(file); e.target.value = "";
-    }
-
-    editor.addEventListener('click', (e) => {
-      if (e.target.tagName === 'IMG') selectImage(e.target); else clearImageSelection();
-    });
-
-    function selectImage(img) { clearImageSelection(); selectedImage = img; selectedImage.classList.add('selected-img'); imageControls.style.display = 'flex'; }
-    function clearImageSelection() { if (selectedImage) { selectedImage.classList.remove('selected-img'); selectedImage = null; } imageControls.style.display = 'none'; }
-    function deleteSelectedImage() { if (!selectedImage) return; selectedImage.remove(); clearImageSelection(); scheduleSync(); }
-
     // --- STICKY NOTES ---
     function selectDefaultStickyColor(color, swatchEl) { activeStickyColor = color; document.querySelectorAll('.color-swatches .swatch').forEach(s => s.classList.remove('selected')); swatchEl.classList.add('selected'); }
     function createSticky() { addStickyNode(60, 60, "New note...", activeStickyColor, '200px', '160px'); scheduleSync(); }
@@ -585,7 +541,6 @@
       el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.width = w; el.style.height = h;
       el.dataset.color = color; el.style.backgroundColor = color;
       
-      // Auto-trigger sync when the user drags the native corner resize tool
       const resizeObserver = new ResizeObserver(() => scheduleSync());
       resizeObserver.observe(el);
 
