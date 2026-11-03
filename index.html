@@ -86,7 +86,8 @@
     #editor table { border-collapse: collapse; margin: 14px 0; width: auto; table-layout: fixed; }
     #editor td, #editor th { border: 1px solid #ccc; padding: 8px 12px; min-width: 50px; min-height: 25px; vertical-align: top; position: relative; }
     
-    #editor img { max-width: 100%; border-radius: 4px; margin: 4px; display: inline-block; vertical-align: middle; cursor: pointer; transition: outline 0.1s; }
+    /* Removed cursor: pointer to prevent overrides during corner resizing */
+    #editor img { max-width: 100%; border-radius: 4px; margin: 4px; display: inline-block; vertical-align: middle; transition: outline 0.1s; }
     #editor img.selected-img { outline: 3px solid #1a73e8; }
 
     .embedded-file-card { display: inline-flex; align-items: center; gap: 10px; background: var(--sidebar-btn-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; margin: 8px 4px; text-decoration: none; color: var(--text-main); font-size: 13px; user-select: none; cursor: pointer; max-width: 380px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background 0.15s, border-color 0.15s; }
@@ -111,7 +112,6 @@
     .sticky-palette span { width: 16px; height: 16px; border-radius: 50%; cursor: pointer; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
   </style>
 
-  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -218,7 +218,6 @@
   </div>
 
   <script>
-    // --- GOOGLE DRIVE CONFIGURATION ---
     const CLIENT_ID = '157147659451-saa5f64vvgg33kkl41klse8jfq447rnr.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     const SYNC_FILENAME = 'notes_app_sync.json';
@@ -246,12 +245,9 @@
     const imageControls = document.getElementById('image-controls');
     const themeSelect = document.getElementById('gui-theme-select');
 
-    // --- SELECTION PRESERVATION FOR INSTANT COLORS ---
     document.addEventListener('selectionchange', () => {
       const sel = window.getSelection();
-      if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
-        savedSelectionRange = sel.getRangeAt(0);
-      }
+      if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) savedSelectionRange = sel.getRangeAt(0);
     });
 
     editor.addEventListener('click', (e) => {
@@ -260,26 +256,13 @@
     });
 
     function restoreSelection() {
-      if (savedSelectionRange) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedSelectionRange);
-      }
+      if (savedSelectionRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedSelectionRange); }
     }
 
-    document.getElementById('text-color').addEventListener('input', (e) => {
-      restoreSelection(); document.execCommand('foreColor', false, e.target.value); scheduleSync();
-    });
+    document.getElementById('text-color').addEventListener('input', (e) => { restoreSelection(); document.execCommand('foreColor', false, e.target.value); scheduleSync(); });
+    document.getElementById('bg-color').addEventListener('input', (e) => { restoreSelection(); document.execCommand('hiliteColor', false, e.target.value); scheduleSync(); });
+    document.getElementById('cell-color').addEventListener('input', (e) => { if (lastActiveCell) { lastActiveCell.style.backgroundColor = e.target.value; scheduleSync(); } });
 
-    document.getElementById('bg-color').addEventListener('input', (e) => {
-      restoreSelection(); document.execCommand('hiliteColor', false, e.target.value); scheduleSync();
-    });
-
-    document.getElementById('cell-color').addEventListener('input', (e) => {
-      if (lastActiveCell) { lastActiveCell.style.backgroundColor = e.target.value; scheduleSync(); }
-    });
-
-    // --- THEME CONTROL ---
     function applyTheme(themeName, shouldSync = false) {
       document.body.className = '';
       if (themeName && themeName !== 'default') document.body.classList.add(`theme-${themeName}`);
@@ -288,10 +271,7 @@
       if (shouldSync) scheduleSync();
     }
 
-    // --- GOOGLE API & SYNC ---
-    window.addEventListener('load', () => {
-      tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' });
-    });
+    window.addEventListener('load', () => { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); });
 
     function handleAuthClick() {
       tokenClient.callback = async (resp) => {
@@ -330,10 +310,8 @@
           if (driveData && Array.isArray(driveData.groups) && driveData.groups.length > 0) {
             const localHasCustomNotes = state.groups.length > 1 || (state.groups[0] && state.groups[0].content && !state.groups[0].content.includes("Start writing here..."));
             if (localHasCustomNotes && !confirm("Replace current local notes with the copy from Google Drive?")) { await syncToDrive(); return; }
-            state = driveData;
-            localStorage.setItem('notes_app_data', JSON.stringify(state));
-            applyTheme(state.theme || 'default', false);
-            renderTabs(); renderWorkspace();
+            state = driveData; localStorage.setItem('notes_app_data', JSON.stringify(state));
+            applyTheme(state.theme || 'default', false); renderTabs(); renderWorkspace();
             syncStatus.innerText = `Loaded from Drive (${new Date().toLocaleTimeString()})`;
             return;
           }
@@ -344,8 +322,7 @@
 
     async function syncToDrive() {
       if (!userAccessToken) return;
-      saveLocalState();
-      syncStatus.innerText = "Syncing to Drive...";
+      saveLocalState(); syncStatus.innerText = "Syncing to Drive...";
       try {
         const fileId = await getOrCreateDriveFile();
         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${userAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
@@ -353,51 +330,32 @@
       } catch (e) { syncStatus.innerText = "Sync error"; }
     }
 
-    // --- WORKSPACE & EDITOR LOGIC ---
     function saveLocalState() {
       const current = state.groups.find(g => g.id === state.activeId);
       if (current) {
         current.content = editor.innerHTML;
         current.stickies = Array.from(document.querySelectorAll('.sticky-note')).map(el => ({
-          x: parseInt(el.style.left) || 20, y: parseInt(el.style.top) || 20,
-          w: el.style.width || '200px', h: el.style.height || '160px',
-          color: el.dataset.color || '#fff9c4', text: el.querySelector('.sticky-content').innerHTML
+          x: parseInt(el.style.left) || 20, y: parseInt(el.style.top) || 20, w: el.style.width || '200px', h: el.style.height || '160px', color: el.dataset.color || '#fff9c4', text: el.querySelector('.sticky-content').innerHTML
         }));
       }
-      
-      // Failsafe error handling for storage limits
-      try {
-        localStorage.setItem('notes_app_data', JSON.stringify(state));
-      } catch (e) {
-        console.error("Storage Error - Likely too many large images:", e);
-      }
+      try { localStorage.setItem('notes_app_data', JSON.stringify(state)); } catch (e) { console.error("Storage Error:", e); }
     }
 
-    function scheduleSync() {
-      saveLocalState();
-      syncStatus.innerText = "Saving locally...";
-      clearTimeout(syncTimeout);
-      syncTimeout = setTimeout(() => { if (userAccessToken) syncToDrive(); }, 2000);
-    }
+    function scheduleSync() { saveLocalState(); syncStatus.innerText = "Saving locally..."; clearTimeout(syncTimeout); syncTimeout = setTimeout(() => { if (userAccessToken) syncToDrive(); }, 2000); }
 
     function renderTabs() {
       tabsContainer.innerHTML = '';
       state.groups.forEach(g => {
-        const tab = document.createElement('div');
-        tab.className = `tab ${g.id === state.activeId ? 'active' : ''}`;
+        const tab = document.createElement('div'); tab.className = `tab ${g.id === state.activeId ? 'active' : ''}`;
         tab.innerHTML = `<span>${g.name}</span>${state.groups.length > 1 ? `<span class="close-tab" onclick="deleteGroup(event, ${g.id})">×</span>` : ''}`;
-        tab.onclick = () => switchTab(g.id);
-        tabsContainer.appendChild(tab);
+        tab.onclick = () => switchTab(g.id); tabsContainer.appendChild(tab);
       });
     }
 
     function renderWorkspace() {
-      const current = state.groups.find(g => g.id === state.activeId);
-      if (!current) return;
-      editor.innerHTML = current.content || "";
-      stickyContainer.innerHTML = "";
-      (current.stickies || []).forEach(s => addStickyNode(s.x, s.y, s.text, s.color || '#fff9c4', s.w, s.h));
-      clearImageSelection();
+      const current = state.groups.find(g => g.id === state.activeId); if (!current) return;
+      editor.innerHTML = current.content || ""; stickyContainer.innerHTML = "";
+      (current.stickies || []).forEach(s => addStickyNode(s.x, s.y, s.text, s.color || '#fff9c4', s.w, s.h)); clearImageSelection();
     }
 
     function switchTab(id) { saveLocalState(); state.activeId = id; renderTabs(); renderWorkspace(); }
@@ -405,23 +363,14 @@
     function deleteGroup(event, id) { event.stopPropagation(); if (!confirm("Delete this group and its contents?")) return; state.groups = state.groups.filter(g => g.id !== id); if (state.activeId === id) state.activeId = state.groups[0].id; renderTabs(); renderWorkspace(); scheduleSync(); }
     function formatDoc(cmd, val = null) { restoreSelection(); document.execCommand(cmd, false, val); editor.focus(); scheduleSync(); }
 
-    // --- TABLE MANIPULATION ---
     function insertTable() {
       const r = prompt("Rows:", "3"); const c = prompt("Columns:", "3"); if (!r || !c) return;
       let html = "<table><tbody>";
-      for (let i = 0; i < parseInt(r); i++) {
-        html += "<tr>"; for (let j = 0; j < parseInt(c); j++) html += "<td style='width: 120px; height: 35px; border: 1px solid #ccc;'>&nbsp;</td>"; html += "</tr>";
-      }
+      for (let i = 0; i < parseInt(r); i++) { html += "<tr>"; for (let j = 0; j < parseInt(c); j++) html += "<td style='width: 120px; height: 35px; border: 1px solid #ccc;'>&nbsp;</td>"; html += "</tr>"; }
       html += "</tbody></table><p></p>"; formatDoc('insertHTML', html);
     }
 
-    function getParentTableCell() {
-      const selection = window.getSelection(); if (!selection.rangeCount) return null;
-      let node = selection.anchorNode;
-      while (node && node !== editor) { if (node.nodeName === 'TD' || node.nodeName === 'TH') return node; node = node.parentNode; }
-      return null;
-    }
-
+    function getParentTableCell() { const selection = window.getSelection(); if (!selection.rangeCount) return null; let node = selection.anchorNode; while (node && node !== editor) { if (node.nodeName === 'TD' || node.nodeName === 'TH') return node; node = node.parentNode; } return null; }
     function addTableRow() { const cell = getParentTableCell(); if (!cell) return; const row = cell.parentElement; const newRow = row.cloneNode(true); Array.from(newRow.children).forEach(td => td.innerHTML = "&nbsp;"); row.parentElement.insertBefore(newRow, row.nextSibling); scheduleSync(); }
     function addTableColumn() { const cell = getParentTableCell(); if (!cell) return; const colIndex = cell.cellIndex; const table = cell.closest('table'); Array.from(table.rows).forEach(row => { const newCell = row.insertCell(colIndex + 1); newCell.style.width = '120px'; newCell.style.border = cell.style.border || '1px solid #ccc'; newCell.innerHTML = "&nbsp;"; }); scheduleSync(); }
     function deleteTableRow() { const cell = getParentTableCell(); if (!cell) return; cell.parentElement.remove(); scheduleSync(); }
@@ -434,7 +383,7 @@
       Array.from(table.querySelectorAll('td, th')).forEach(c => { c.style.border = borderCss; }); scheduleSync();
     }
 
-    // --- CORNER RESIZING FOR TABLES & IMAGES ---
+    // --- CORNER RESIZING FOR TABLES & IMAGES (FIXED) ---
     let resizingTarget = null;
     let resizeAction = null; 
     let dragStartX = 0, dragStartY = 0, startWidth = 0, startHeight = 0;
@@ -446,7 +395,7 @@
       const target = e.target; let cursor = 'text';
       if (target.tagName === 'IMG') {
         const rect = target.getBoundingClientRect();
-        if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) cursor = 'nwse-resize'; else cursor = 'pointer';
+        if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) { cursor = 'nwse-resize'; target.style.cursor = 'nwse-resize'; } else { cursor = 'pointer'; target.style.cursor = 'pointer'; }
       } else {
         const cell = target.closest('td, th');
         if (cell) {
@@ -455,6 +404,7 @@
           if (isTableCorner) cursor = 'nwse-resize';
           else if (rect.right - e.clientX < 10 && rect.right - e.clientX >= 0) cursor = 'col-resize';
           else if (rect.bottom - e.clientY < 10 && rect.bottom - e.clientY >= 0) cursor = 'row-resize';
+          cell.style.cursor = cursor;
         }
       }
       if (editor.style.cursor !== cursor) editor.style.cursor = cursor;
@@ -466,8 +416,10 @@
         const rect = target.getBoundingClientRect();
         if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) {
           e.preventDefault(); resizingTarget = target; resizeAction = 'scale-img'; dragStartX = e.clientX; startWidth = target.offsetWidth;
+          document.body.style.cursor = 'nwse-resize';
+          
           const onMouseMove = (me) => { if (!resizingTarget) return; const newW = startWidth + (me.clientX - dragStartX); resizingTarget.style.width = Math.max(50, newW) + 'px'; resizingTarget.style.height = 'auto'; };
-          const onMouseUp = () => { resizingTarget = null; resizeAction = null; editor.style.cursor = 'text'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); scheduleSync(); };
+          const onMouseUp = () => { resizingTarget.style.cursor = 'pointer'; document.body.style.cursor = ''; resizingTarget = null; resizeAction = null; editor.style.cursor = 'text'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); scheduleSync(); };
           document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp); return;
         }
       }
@@ -479,32 +431,39 @@
         const isRowResize = rect.bottom - e.clientY < 10 && rect.bottom - e.clientY >= 0;
         if (isTableCorner || isColResize || isRowResize) {
           e.preventDefault(); resizingTarget = isTableCorner ? table : cell; resizeAction = isTableCorner ? 'scale-table' : (isColResize ? 'col' : 'row'); dragStartX = e.clientX; dragStartY = e.clientY; startWidth = resizingTarget.offsetWidth; startHeight = resizingTarget.offsetHeight;
+          document.body.style.cursor = isTableCorner ? 'nwse-resize' : (isColResize ? 'col-resize' : 'row-resize');
+          
           const onMouseMove = (me) => {
             if (!resizingTarget) return;
             if (resizeAction === 'scale-table') { resizingTarget.style.width = Math.max(100, startWidth + (me.clientX - dragStartX)) + 'px'; resizingTarget.style.height = Math.max(50, startHeight + (me.clientY - dragStartY)) + 'px'; } 
             else if (resizeAction === 'col') { const newW = Math.max(30, startWidth + (me.clientX - dragStartX)); const colIndex = cell.cellIndex; Array.from(table.rows).forEach(r => { if (r.cells[colIndex]) r.cells[colIndex].style.width = newW + 'px'; }); } 
             else if (resizeAction === 'row') { cell.parentElement.style.height = Math.max(20, startHeight + (me.clientY - dragStartY)) + 'px'; }
           };
-          const onMouseUp = () => { resizingTarget = null; resizeAction = null; editor.style.cursor = 'text'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); scheduleSync(); };
+          const onMouseUp = () => { document.body.style.cursor = ''; resizingTarget = null; resizeAction = null; editor.style.cursor = 'text'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); scheduleSync(); };
           document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
         }
       }
     });
 
-    // --- COMPRESS & INSERT IMAGES ---
+    function insertEmbeddedFile(e) {
+      const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+      reader.onload = function(evt) {
+        const base64Data = evt.target.result; const fileSizeStr = file.size > 1024 * 1024 ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+        const fileHtml = `<div class="embedded-file-card" contenteditable="false" onclick="downloadEmbeddedFile(this)"><span class="file-icon">📎</span><div class="file-details"><span class="file-name" title="${file.name}">${file.name}</span><span class="file-meta">${fileSizeStr} • Click to Download</span></div><a style="display:none;" href="${base64Data}" download="${file.name}"></a></div>&nbsp;`;
+        formatDoc('insertHTML', fileHtml);
+      };
+      reader.readAsDataURL(file); e.target.value = "";
+    }
+    function downloadEmbeddedFile(cardElement) { const hiddenLink = cardElement.querySelector('a'); if (hiddenLink) hiddenLink.click(); }
+
     function insertImage(e) {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
+      const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
       reader.onload = function(evt) { 
         const img = new Image();
         img.onload = function() {
-          const canvas = document.createElement('canvas');
-          let w = img.width, h = img.height;
-          const maxW = 1200; // Auto-compress large images to prevent freeze
+          const canvas = document.createElement('canvas'); let w = img.width, h = img.height; const maxW = 1200;
           if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
+          canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
           const compressedData = canvas.toDataURL('image/jpeg', 0.85);
           formatDoc('insertHTML', `<img src="${compressedData}" style="width: 250px;" />&nbsp;`); 
         };
@@ -518,21 +477,6 @@
     function clearImageSelection() { if (selectedImage) { selectedImage.classList.remove('selected-img'); selectedImage = null; } imageControls.style.display = 'none'; }
     function deleteSelectedImage() { if (!selectedImage) return; selectedImage.remove(); clearImageSelection(); scheduleSync(); }
 
-    // --- FILE EMBEDDING ---
-    function insertEmbeddedFile(e) {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const base64Data = evt.target.result;
-        const fileSizeStr = file.size > 1024 * 1024 ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' : Math.max(1, Math.round(file.size / 1024)) + ' KB';
-        const fileHtml = `<div class="embedded-file-card" contenteditable="false" onclick="downloadEmbeddedFile(this)"><span class="file-icon">📎</span><div class="file-details"><span class="file-name" title="${file.name}">${file.name}</span><span class="file-meta">${fileSizeStr} • Click to Download</span></div><a style="display:none;" href="${base64Data}" download="${file.name}"></a></div>&nbsp;`;
-        formatDoc('insertHTML', fileHtml);
-      };
-      reader.readAsDataURL(file); e.target.value = "";
-    }
-    function downloadEmbeddedFile(cardElement) { const hiddenLink = cardElement.querySelector('a'); if (hiddenLink) hiddenLink.click(); }
-
-    // --- STICKY NOTES ---
     function selectDefaultStickyColor(color, swatchEl) { activeStickyColor = color; document.querySelectorAll('.color-swatches .swatch').forEach(s => s.classList.remove('selected')); swatchEl.classList.add('selected'); }
     function createSticky() { addStickyNode(60, 60, "New note...", activeStickyColor, '200px', '160px'); scheduleSync(); }
 
@@ -541,8 +485,7 @@
       el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.width = w; el.style.height = h;
       el.dataset.color = color; el.style.backgroundColor = color;
       
-      const resizeObserver = new ResizeObserver(() => scheduleSync());
-      resizeObserver.observe(el);
+      const resizeObserver = new ResizeObserver(() => scheduleSync()); resizeObserver.observe(el);
 
       el.innerHTML = `
         <div class="sticky-header">
@@ -559,8 +502,7 @@
       el.querySelector('.sticky-close').onclick = () => { resizeObserver.disconnect(); el.remove(); scheduleSync(); };
       el.querySelector('.sticky-content').oninput = scheduleSync;
 
-      const header = el.querySelector('.sticky-header');
-      let isDragging = false, dragStartX, dragStartY, origX, origY;
+      const header = el.querySelector('.sticky-header'); let isDragging = false, dragStartX, dragStartY, origX, origY;
       header.onmousedown = (e) => {
         if (e.target.closest('.sticky-actions') || e.target.closest('.sticky-palette')) return;
         isDragging = true; dragStartX = e.clientX; dragStartY = e.clientY; origX = el.offsetLeft; origY = el.offsetTop;
@@ -570,7 +512,6 @@
       stickyContainer.appendChild(el);
     }
 
-    // --- LOCAL BACKUP ---
     function exportData() { saveLocalState(); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `notes_backup_${new Date().toISOString().slice(0, 10)}.json`; a.click(); }
     function importData(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const loaded = JSON.parse(evt.target.result); if (loaded.groups && Array.isArray(loaded.groups)) { state = loaded; localStorage.setItem('notes_app_data', JSON.stringify(state)); applyTheme(state.theme || 'default', false); renderTabs(); renderWorkspace(); scheduleSync(); } } catch (err) { alert("Invalid file format."); } }; reader.readAsText(file); e.target.value = ""; }
 
